@@ -1,4 +1,16 @@
-FROM debian:trixie-slim AS builder
+ARG PYTHON_BASE=3.12-slim-bookworm
+
+FROM python:$PYTHON_BASE AS builder
+
+# Repository information is needed for dynamic versioning
+#COPY .git/ /app/.git/ # FIXME Problems copying ~/.git for scm data
+
+# Source
+COPY src/ /app/src
+COPY pyproject.toml pdm.lock /app/
+
+# Readme is needed to satisfy PyProject
+COPY README.md /app/
 
 # Build dummy packages to skip installing them and their dependencies
 RUN apt-get update \
@@ -14,14 +26,28 @@ RUN apt-get update \
     && apt-get purge -y --auto-remove equivs \
     && rm -rf /var/lib/apt/lists/*
 
-FROM debian:trixie-slim
+WORKDIR /app
+
+# Extract version from git
+ARG REL_REF=3.3.21
+#RUN REL_REF=$(git describe --tags --abbrev=0) # FIXME Problems copying ~/.git for scm data
+RUN echo "Building FlareSolverr version $REL_REF"
+
+# Build package
+RUN pip install --upgrade pdm
+ENV PDM_UPDATE_CHECK=false
+ENV PDM_BUILD_SCM_VERSION=$REL_REF
+RUN pdm install --check --prod --no-editable --verbose
+
+FROM python:$PYTHON_BASE
 
 # Copy dummy packages
 COPY --from=builder /libgl1-mesa-dri.deb /adwaita-icon-theme.deb /
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/src /app/src
 
 # Install dependencies and create flaresolverr user
 WORKDIR /app
-COPY requirements.txt .
 RUN apt-get update \
     # Install dummy packages
     && dpkg -i /libgl1-mesa-dri.deb \
@@ -29,7 +55,7 @@ RUN apt-get update \
     && apt-get install -f \
     # Install dependencies
     && apt-get install -y --no-install-recommends chromium xvfb dumb-init \
-        procps curl vim xauth python3 python3-pip \
+        procps curl vim xauth python3 \
     # Remove temporary files and hardware decoding libraries
     && rm -rf /var/lib/apt/lists/* \
     && rm -f /usr/lib/x86_64-linux-gnu/libmfxhw* \
@@ -37,9 +63,6 @@ RUN apt-get update \
     # Create flaresolverr user
     && useradd --home-dir /app --shell /bin/sh flaresolverr \
     && chown -R flaresolverr:flaresolverr . \
-    # Set up Python and install dependencies
-    && ln -s /usr/bin/python3 /usr/local/bin/python \
-    && pip install --break-system-packages -r requirements.txt \
     # Remove temporary files
     && rm -rf /root/.cache /tmp/*
 
@@ -47,16 +70,14 @@ USER flaresolverr
 
 RUN mkdir -p "/app/.config/chromium/Crash Reports/pending"
 
-COPY src .
-COPY package.json ../
-
 EXPOSE 8191
 EXPOSE 8192
 
 # dumb-init avoids zombie chromium processes
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
-CMD ["/usr/local/bin/python", "-u", "/app/flaresolverr.py"]
+ENV PATH="/app/.venv/bin:$PATH"
+CMD ["python", "-um", "flaresolverr"]
 
 # Local build
 # docker build -t ngosang/flaresolverr:3.3.21 .

@@ -1,0 +1,66 @@
+[project]
+name = "FlareSolverr"
+dynamic = ["version"]
+description = "Proxy server to bypass Cloudflare protection"
+authors = [
+    {name = "Diego Heras", email = "ngosang@hotmail.es"},
+]
+maintainers = [
+    {name = "Paul Pfeister", email = "code@pfeister.dev"},
+]
+dependencies = [
+    "bottle==0.12.25",
+    "waitress==2.1.2",
+    "func-timeout==4.3.5",
+    "prometheus-client==0.17.1",
+    "requests==2.32.0",    # required by undetected_chromedriver, DrissionPage
+    "certifi==2024.07.04", # required by undetected_chromedriver
+    "websockets==11.0.3",  # required by undetected_chromedriver
+    "xvfbwrapper==0.2.9; platform_system != \"Windows\"",
+    "pefile==2023.2.7; platform_system == \"Windows\"",
+    "lxml",                # required by DrissionPage
+    "cssselect",           # required by DrissionPage
+    "DownloadKit>=2.0.0",  # required by DrissionPage
+    "websocket-client",    # required by DrissionPage
+    "click",               # required by DrissionPage
+    "tldextract",          # required by DrissionPage
+    "psutil",              # required by DrissionPage
+    "openpyxl>=3.1.5",     # required by DrissionPage (required by DataRecorder)
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["proxy", "cloudflare", "ddos-guard", "captcha", "security"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+test = ["WebTest==3.0.0"]
+[tool.pdm.dev-dependencies]
+test = [
+    "WebTest==3.0.0",
+]
+
+[project.urls]
+homepage = "https://github.com/FlareSolverr/FlareSolverr/"
+bug-tracker = "https://github.com/FlareSolverr/FlareSolverr/issues/"
+documentation = "https://github.com/FlareSolverr/FlareSolverr/wiki/"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.version]
+source = "scm"
