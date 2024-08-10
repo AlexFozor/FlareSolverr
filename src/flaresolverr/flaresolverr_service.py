@@ -6,7 +6,7 @@ from datetime import timedelta
 from html import escape
 from urllib.parse import unquote, quote
 
-from func_timeout import FunctionTimedOut, func_timeout
+from func_timeout import func_timeout
 
 from ..flaresolverr.DrissionPage import ChromiumPage
 from ..flaresolverr.DrissionPage._units.listener import DataPacket
@@ -16,6 +16,7 @@ from ..flaresolverr.dtos import (STATUS_ERROR, STATUS_OK, ChallengeResolutionRes
                   ChallengeResolutionT, HealthResponse, IndexResponse,
                   V1RequestBase, V1ResponseBase)
 from ..flaresolverr.sessions import SessionsStorage
+
 
 ACCESS_DENIED_TITLES = [
     # Cloudflare
@@ -236,8 +237,6 @@ def _resolve_challenge(req: V1RequestBase, method: str) -> ChallengeResolutionT:
             driver = utils.get_webdriver(req.proxy, user_data_path)
             logging.debug('New instance of webdriver has been created to perform the request')
         return func_timeout(timeout, _evil_logic, (req, driver, method))
-    except FunctionTimedOut:
-        raise Exception(f'Error solving the challenge. Timeout after {timeout} seconds.')
     except Exception as e:
         raise Exception('Error solving the challenge. ' + str(e).replace('\n', '\\n'))
     finally:

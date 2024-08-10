@@ -12,7 +12,7 @@ from re import findall
 from threading import Thread
 from time import perf_counter, sleep
 
-from DataRecorder.tools import make_valid_name
+from ...DataRecorder.tools import make_valid_name
 
 from .._base.base import BasePage
 from .._elements.chromium_element import run_js, make_chromium_eles
